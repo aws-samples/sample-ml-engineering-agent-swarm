@@ -1,0 +1,8 @@
+{
+  "app": "python3 -m infra.app",
+  "context": {
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:target-partitions": ["aws"],
+    "@aws-cdk/core:stackRelativeExports": true
+  }
+}

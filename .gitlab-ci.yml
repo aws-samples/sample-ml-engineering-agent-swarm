@@ -1,0 +1,72 @@
+default:
+  image: public.ecr.aws/docker/library/python:3.11-slim
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends git
+    - python -m pip install --no-cache-dir uv==0.8.8
+    - export TMPDIR="$CI_PROJECT_DIR/../.ci-tmp-$CI_JOB_ID"
+    - mkdir -p "$TMPDIR"
+
+stages:
+  - dox
+  - verify
+  - security
+  - synchronize
+
+variables:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  UV_LINK_MODE: copy
+
+dox:
+  stage: dox
+  before_script: []
+  script:
+    - python scripts/dox_lint.py . --recursive
+
+verify:
+  stage: verify
+  script:
+    - apt-get install -y --no-install-recommends nodejs
+    - uv sync --frozen --extra dev --extra security --extra cdk --extra agents --extra runtime-cpu
+    - uv run --frozen --no-sync python -m pytest -q tests
+    - uv run --frozen --no-sync python scripts/verify_repository_governance.py --scan-tree --ref HEAD
+    - uv run --frozen --no-sync ruff check src scripts infra tests
+
+bandit:
+  stage: security
+  script:
+    - uv sync --frozen --extra security
+    - uv run bandit -c pyproject.toml -r src scripts infra -lll
+
+pip-audit:
+  stage: security
+  script:
+    - uv sync --frozen --extra security
+    - uv export --frozen --format requirements-txt --no-emit-project > "$TMPDIR/requirements.txt"
+    - uv run pip-audit -r "$TMPDIR/requirements.txt" --strict
+
+detect-secrets:
+  stage: security
+  script:
+    - uv sync --frozen --extra security
+    - git ls-files -z | xargs -0 uv run detect-secrets-hook --baseline .secrets.baseline
+
+sbom:
+  stage: security
+  script:
+    - uv sync --frozen --extra security
+    - uv export --frozen --format requirements-txt --no-emit-project > "$TMPDIR/requirements.txt"
+    - uv run cyclonedx-py requirements "$TMPDIR/requirements.txt" --output-format JSON -o sbom.json
+    - test -s sbom.json
+  artifacts:
+    paths:
+      - sbom.json
+    expire_in: 90 days
+
+sync-main:
+  stage: synchronize
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  script:
+    - git fetch --no-tags --depth=1 https://github.com/aws-samples/sample-ml-engineering-agent-swarm.git main:refs/remotes/github/main
+    - python scripts/verify_repository_governance.py --compare-refs HEAD refs/remotes/github/main

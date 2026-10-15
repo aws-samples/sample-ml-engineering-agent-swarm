@@ -1,0 +1,40 @@
+Agentic ML Lifecycle Automation Surface
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+This product includes software developed at
+Amazon.com, Inc. or its affiliates (https://aws.amazon.com/).
+
+Licensed under the MIT No Attribution License (MIT-0; see the LICENSE file).
+
+------------------------------------------------------------------------------
+Third-party attributions
+------------------------------------------------------------------------------
+
+This project does not vendor or redistribute third-party source code. Its
+runtime dependencies are resolved at install time from public package indexes
+and are governed by their own licenses (see each package's distribution and the
+generated CycloneDX SBOM produced by the CI `sbom` job for the resolved set).
+
+Certain prompt templates and design patterns in this project were adapted, with
+attribution, from the following open-source projects. No code or text from these
+projects is redistributed here; only independently re-authored prompts/patterns
+inspired by them are included:
+
+  - ml-ralph (pentoai) — Apache License 2.0
+      Paranoid Scientist + Data Verification Checklist patterns.
+  - MetaGPT (geekan) — MIT License
+      THOUGHT_GUIDANCE / MODEL_TRAIN_PROMPT / FEATURE_ENGINEERING_PROMPT patterns.
+  - AutoKaggle (multimodal-art-projection) — see project license
+      PROMPT_PLANNER / PROMPT_DEVELOPER_DEBUG patterns.
+  - mle-bench (openai) — MIT License
+      Grader + Registry shape.
+
+The following research works informed the design (cited by identifier; no
+content redistributed):
+
+  - R&D-Agent (arXiv:2505.14738) — 2-phase x 3-component skeleton.
+  - MLE-STAR (arXiv:2506.15692) — ablation-guided refinement + leakage checker.
+  - CAAFE (arXiv:2305.03403) — feature-with-justification validator loop.
+
+Canonical AWS Strands + Bedrock AgentCore integration patterns follow the
+publicly published aws-samples conventions (Apache License 2.0).

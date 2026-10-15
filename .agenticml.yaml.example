@@ -1,0 +1,65 @@
+# Agentic-ML Configuration  (COMMITTED TEMPLATE — placeholders only)
+# Copy to ~/.agenticml/config.yaml or .agenticml.yaml in project root.
+#
+# Config resolution order (highest priority first):
+#   1. Environment variables (AMLAS_* preferred; AGENTICML_*/AMLAS_* legacy; AWS_*)
+#   2. Project config (.agenticml.yaml in working directory)
+#   3. User config (~/.agenticml/config.yaml)
+#   4. Safe defaults
+#
+# This file carries NO real account id, bucket, or ARN — only placeholders.
+# The unified externalization model (env -> SSM -> default, fail-loud on
+# REQUIRED) is implemented in src/amlas/config/externalized.py
+# (CONFIG_KEYS). SSM keys live under /amlas/*.
+
+aws:
+  profile: ""              # AWS CLI profile (empty = default boto3 credential chain)
+  region: ""               # select via setup, AWS_REGION, or the chosen AWS profile
+  s3_bucket: ""            # S3 bucket for model artifacts (placeholder; supply your own)
+  bedrock_region: ""       # Bedrock region (defaults to aws.region if empty)
+  agentcore_endpoint: ""   # AgentCore runtime endpoint
+  agentcore_runtime_arn: ""  # cloud-dispatch AgentCore runtime ARN (env AGENTCORE_RUNTIME_ARN)
+                             # e.g. arn:aws:bedrock-agentcore:<AWS_REGION>:<AWS_ACCOUNT_ID>:runtime/<name>
+  session_bucket: ""       # session S3 bucket for cloud dispatch (env AMLAS_SESSION_BUCKET; falls back to s3_bucket)
+
+local:
+  workspace_dir: "."
+  output_dir: "./output"
+  specs_dir: "./specs"
+  data_dir: "./data"
+
+lake:                       # medallion lakehouse (tools/lake adapter)
+  catalog: "glue"           # glue | none (Glue Data Catalog backend)
+  silver_prefix: ""         # e.g. s3://<LAKE_BUCKET>/silver/ (env AMLAS_LAKE_SILVER_PREFIX; SSM /amlas/lake-silver-prefix)
+  gold_prefix: ""           # e.g. s3://<LAKE_BUCKET>/gold/   (env AMLAS_LAKE_GOLD_PREFIX;   SSM /amlas/lake-gold-prefix)
+
+mlops:                      # SageMaker MLOps (tools/mlops agents)
+  model_package_group: "amlas-models"    # Model Registry group (HYPHENATED — SageMaker forbids underscores). env AMLAS_MODEL_PACKAGE_GROUP; SSM /amlas/model-package-group
+  feature_store_db: "amlas_features"     # Feature Store database (env AMLAS_FEATURE_STORE_DB)
+  monitor_schedule: "hourly"             # Model Monitor cadence (env AMLAS_MONITOR_SCHEDULE)
+
+# ---------------------------------------------------------------------------
+# SSM Parameter Store keys and environment variables consumed by the runtime
+# (populated by the standing CDK stacks). No account ids are hardcoded here.
+# Canonical env names use AMLAS_ (legacy AGENTICML_/AMLAS_ honored one release).
+#
+# SSM path /amlas/*  ->  env var
+#   runtime-ecr-uri               ->  AMLAS_RUNTIME_ECR_URI (deploy input; Phase 6)
+#   lake-bucket                   ->  AMLAS_LAKE_BUCKET / AMLAS_S3_BUCKET
+#   lake-bronze-prefix            ->  AMLAS_LAKE_BRONZE_PREFIX (optional)
+#   lake-silver-prefix            ->  AMLAS_LAKE_SILVER_PREFIX
+#   lake-gold-prefix              ->  AMLAS_LAKE_GOLD_PREFIX
+#   glue-database                 ->  AMLAS_GLUE_DATABASE (catalog=glue)
+#   model-package-group           ->  AMLAS_MODEL_PACKAGE_GROUP (= amlas-models)
+#   feature-store-db              ->  AMLAS_FEATURE_STORE_DB    (= amlas_features)
+#   athena-workgroup              ->  AMLAS_ATHENA_WORKGROUP    (= primary)
+#   guardrail-id / guardrail-version -> AMLAS_GUARDRAIL_ID / AMLAS_GUARDRAIL_VERSION
+#   kms-key-arn                   ->  AMLAS_KMS_KEY_ARN (optional BYO CMK)
+#   vpc-id / private-subnet-ids   ->  AMLAS_VPC_ID / AMLAS_PRIVATE_SUBNET_IDS
+#   session-bucket                ->  AMLAS_SESSION_BUCKET
+#   agentcore-runtime-arn         ->  AGENTCORE_RUNTIME_ARN
+#   tavily-secret-id              ->  TAVILY_SECRET_ID  (= amlas/tavily-api-key; SECRET id only)
+# Runtime access also needs:
+#   AWS_PROFILE=<your-aws-profile> AWS_REGION=<AWS_REGION>
+#   SAGEMAKER_EXECUTION_ROLE_ARN (= arn:aws:iam::<AWS_ACCOUNT_ID>:role/amlas-sagemaker-exec)
+# ---------------------------------------------------------------------------

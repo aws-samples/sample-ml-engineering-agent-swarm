@@ -1,0 +1,76 @@
+# Python environments, caches, and build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+runs/
+
+# OS and editor files
+.DS_Store
+**/.DS_Store
+
+# Datasets, model artifacts, and large generated files
+data/
+datasets/
+models/
+artifacts/
+checkpoints/
+knowledge-base/pricing/*.json
+*.csv
+*.tsv
+*.parquet
+*.arrow
+*.feather
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.h5
+*.hdf5
+*.safetensors
+*.tflite
+*.pmml
+*.zip
+
+# CDK and deployment output
+cdk.out/
+cdk.out.*/
+infra/runtime-policy.json
+dependencies.zip
+dependencies.hash
+output/
+tmp/
+*.log
+
+# Local configuration and credentials
+.env
+*.env
+.env.tui
+.env.agentcore
+.env.swarm
+.env.live
+!.env.example
+!.env.tui.example
+!.env.agentcore.example
+!.env.swarm.example
+!.env.live.example
+.bedrock_agentcore.yaml
+!.bedrock_agentcore.yaml.example
+.agenticml.yaml
+!.agenticml.yaml.example
+
+# Local agent/runtime state
+.lightweight_semantic_engine/
+.semantic_engine_ignore
+.claude-flow/
+.swarm/
+.roo/

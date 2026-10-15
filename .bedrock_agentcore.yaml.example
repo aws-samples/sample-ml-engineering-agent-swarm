@@ -1,0 +1,97 @@
+# AgentCore toolkit config TEMPLATE (placeholders only — SEC-01).
+#
+# The real `.bedrock_agentcore.yaml` is NOT tracked (see .gitignore) because the
+# starter-toolkit writes live account IDs + ARNs into it (AMLAS-SEC-001 / R-001).
+# Generate the real file locally with `agentcore configure ...` (the toolkit
+# populates `aws.account`, `execution_role`, `ecr_repository`, `agent_arn`,
+# CodeBuild role + source bucket from your authenticated account), or copy this
+# template and substitute the placeholders from SSM / CDK outputs:
+#
+#   ACCOUNT_ID   → `aws sts get-caller-identity --query Account --output text`
+#   RUNTIME_ID   → SSM /amlas/agentcore-runtime-arn (after deploy)
+#   ECR repo URI → SSM /amlas/runtime-ecr-uri (AgentCoreRuntimeStack)
+#
+# See docs/realinfra/04-configuration-and-env-layers.md for the env/SSM wiring.
+
+default_agent: amlas
+agents:
+  amlas:
+    name: amlas
+    entrypoint: amlas.app:app
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: null
+    source_path: null
+    aws:
+      execution_role: arn:aws:iam::<ACCOUNT_ID>:role/amlas-runtime-exec
+      execution_role_auto_create: false
+      account: '<ACCOUNT_ID>'
+      region: <AWS_REGION>
+      ecr_repository: <ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/bedrock-agentcore-amlas
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      # SEC-02 / R-009 — network exposure hardening:
+      #   `network_mode: PUBLIC` is the AgentCore default and is the ONLY mode some
+      #   accounts/regions currently support for container runtimes. PUBLIC controls
+      #   the runtime's EGRESS path (unrestricted internet), NOT inbound auth —
+      #   inbound is gated by the data-plane IAM/SigV4 control PLUS the inbound
+      #   authorizer below. If your account supports VPC mode, set
+      #   `network_mode: VPC` and reference the private subnets provisioned by
+      #   NetworkStack (SSM /amlas/private-subnet-ids) to confine egress
+      #   and route AWS calls through the PrivateLink endpoints (R-010). When PUBLIC
+      #   is required, the compensating controls are: (1) the inbound authorizer
+      #   below MUST be enabled, (2) egress is monitored via CloudTrail detections
+      #   (DetectionsStack / R-011), (3) tool/agent code performs HTTPS-only egress.
+      network_configuration:
+        network_mode: PUBLIC          # prefer VPC where supported (see note above)
+        network_mode_config: null
+      protocol_configuration:
+        # server_protocol is the INTERNAL container protocol; AgentCore terminates
+        # TLS at its managed front door, so this is NOT plaintext-over-internet.
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: amlas-<RUNTIME_ID>
+      agent_arn: arn:aws:bedrock-agentcore:<AWS_REGION>:<ACCOUNT_ID>:runtime/amlas-<RUNTIME_ID>
+      agent_session_id: null
+    codebuild:
+      project_name: bedrock-agentcore-amlas-builder
+      execution_role: arn:aws:iam::<ACCOUNT_ID>:role/AmazonBedrockAgentCoreSDKCodeBuild-<AWS_REGION>-<SUFFIX>
+      source_bucket: bedrock-agentcore-codebuild-sources-<ACCOUNT_ID>-<AWS_REGION>
+    memory:
+      mode: NO_MEMORY
+      memory_id: null
+      memory_arn: null
+      memory_name: null
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+      was_created_by_toolkit: false
+    identity:
+      credential_providers: []
+      workload: null
+    # SEC-02 / R-009 — inbound authorizer (REQUIRED when network_mode is PUBLIC):
+    #   The runtime MUST NOT rely on the implicit IAM/SigV4 data-plane gate alone.
+    #   Enable a JWT (or OAuth) authorizer so only tokens from the configured issuer
+    #   /audience can invoke the runtime. Set `aws_jwt.enabled: true` and populate
+    #   `issuer_url` + `audiences` (and/or `authorizer_configuration` for a custom
+    #   Lambda authorizer) with your identity-provider values at configure time.
+    #   The placeholders below show the shape; the toolkit-generated default ships
+    #   DISABLED — flip it on before exposing the runtime to any non-IAM caller.
+    aws_jwt:
+      enabled: true                   # SEC-02 / R-009: secure default — populate issuer/audiences before deploy
+      audiences: ["<your-audience>"]  # e.g. ["amlas-runtime"] — REQUIRED (fill before deploy)
+      signing_algorithm: ES384
+      issuer_url: "<your-idp-issuer-url>"  # REQUIRED (fill before deploy), e.g. https://<your-idp>/.well-known/jwks.json
+      duration_seconds: 300
+    authorizer_configuration: null    # SEC-02 / R-009: or a custom-authorizer config here
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false

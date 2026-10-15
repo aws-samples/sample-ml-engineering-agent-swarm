@@ -1,0 +1,494 @@
+/* Agentic-ML TUI Theme — Amlas Red (#C8102E) */
+
+Screen {
+    background: $surface;
+}
+
+/* ─── Title and Section Headers ─── */
+
+.pane-title {
+    color: #C8102E;
+    text-style: bold;
+    padding: 1 2;
+    text-align: center;
+    width: 100%;
+}
+
+.section-title {
+    color: #C8102E;
+    text-style: bold;
+    padding: 0 1;
+    margin-top: 1;
+}
+
+/* ─── Header ─── */
+
+Header {
+    background: #C8102E;
+    color: white;
+}
+
+/* ─── Runtime Mode Bar — INSIDE the Header row, immediately left of the clock ───
+   The bar is nested in the stock Header and docked right; the 10-cell right margin
+   equals Textual 8.2.7's right-docked HeaderClock width, so the control lands on
+   the SAME row as the time, just to its left (verified via widget.region in a
+   Pilot harness). `compact=True` on the Select keeps it 1 cell tall (borderless)
+   so it fits the height-1 Header; the dropdown overlay escapes via
+   `overlay: screen` in Select's default CSS. */
+#mode-bar {
+    dock: right;
+    width: auto;
+    height: 1;              /* single-cell band inside the height-1 Header */
+    margin: 0 10 0 0;       /* clear the 10-cell HeaderClock on its right */
+    background: #C8102E;    /* match the Header brand red */
+    color: white;
+}
+#mode-label {
+    width: auto;
+    padding: 0 1;
+    color: white;
+    text-style: bold;
+}
+#mode-select {
+    width: 20;              /* fits the longest label "Local (Bedrock)" + chevron */
+    background: #C8102E;
+}
+#mode-select SelectCurrent {
+    background: #C8102E;
+    color: white;
+}
+
+/* ─── Footer ─── */
+
+Footer {
+    background: $surface-darken-1;
+}
+
+/* ─── TabbedContent ─── */
+
+TabbedContent {
+    height: 1fr;
+}
+
+TabPane {
+    padding: 1 2;
+}
+
+Underline > .underline--bar {
+    color: #C8102E;
+}
+
+Tab.-active {
+    color: #C8102E;
+    text-style: bold;
+}
+
+/* ─── DataTable Styling ─── */
+
+DataTable {
+    height: auto;
+    max-height: 14;
+    margin: 1 0;
+}
+
+DataTable > .datatable--header {
+    background: #C8102E;
+    color: white;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: #C8102E 30%;
+}
+
+/* ─── Buttons ─── */
+
+Button {
+    margin: 0 1;
+}
+
+Button.-primary {
+    background: #C8102E;
+    color: white;
+}
+
+Button.-success {
+    background: #2E8B57;
+    color: white;
+}
+
+Button.-warning {
+    background: #DAA520;
+    color: white;
+}
+
+Button.-error {
+    background: #8B0000;
+    color: white;
+}
+
+/* ─── ProgressBar ─── */
+
+ProgressBar > .bar--complete {
+    color: #C8102E;
+}
+
+ProgressBar > .bar--bar {
+    color: #C8102E 50%;
+}
+
+/* ─── Input Fields ─── */
+
+Input {
+    margin: 1 0;
+}
+
+Input:focus {
+    border: tall #C8102E;
+}
+
+/* ─── Log Widget ─── */
+
+Log {
+    height: 12;
+    border: solid $primary-background;
+    margin: 1 0;
+    background: $surface-darken-2;
+}
+
+/* ─── Layout Containers ─── */
+
+/* /#13: split the dashboard into the content column (left) and the
+   7-agent logs pane (right, ). */
+.dashboard-split {
+    height: 1fr;
+}
+
+.dashboard-content {
+    height: 1fr;
+    width: 2fr;
+    overflow-y: auto;
+}
+
+/* : the RIGHT-hand 7-agent logs pane (replaces the running log on the right). */
+.agent-logs-section {
+    width: 1fr;
+    padding: 0 1;
+    height: 1fr;
+}
+
+#agent-logs-content {
+    height: 1fr;
+    overflow-y: auto;
+}
+
+/* : the agent-chosen dynamic primary pane (in the left content column). */
+.dynamic-primary-section {
+    height: auto;
+    padding: 0 1;
+    margin: 1 0;
+}
+
+#dynamic-primary-chart {
+    height: 4;
+    margin: 1 0;
+    color: #C8102E;
+}
+
+/* : the consolidated realtime running-log ticker (now in the left column). */
+.running-log-section {
+    padding: 0 1;
+    height: auto;
+    max-height: 12;
+}
+
+#running-log-content {
+    height: auto;
+    max-height: 12;
+    overflow-y: auto;
+}
+
+.bottom-section {
+    height: auto;
+}
+
+.progress-section {
+    width: 1fr;
+    padding: 0 1;
+}
+
+.health-section {
+    width: 1fr;
+    padding: 0 1;
+}
+
+/* ─── Specs Layout ─── */
+
+.specs-layout {
+    height: 1fr;
+}
+
+.specs-list-panel {
+    width: 1fr;
+    padding: 0 1;
+}
+
+/* X-3 (spec §3c): the Specs list is now populated from the REAL example-spec
+   lister, so it can hold many more rows than the old 3 hardcoded samples. Cap the
+   list table height so a long real list scrolls INTERNALLY instead of pushing the
+   Load/Validate action buttons off small viewports (regression guard for
+   test_validate_button_invokes_validate_spec on the 80x24 default test screen). */
+#spec-table {
+    max-height: 6;
+    overflow-y: auto;
+}
+
+.spec-preview-panel {
+    width: 1fr;
+    padding: 0 1;
+}
+
+.spec-actions {
+    height: auto;
+    margin-top: 1;
+}
+
+/* ─── Pipeline Layout ─── */
+
+.pipeline-content {
+    height: 1fr;
+}
+
+.pipeline-inputs {
+    height: auto;
+}
+
+.pipeline-buttons {
+    height: auto;
+    margin-top: 1;
+}
+
+.pipeline-monitor {
+    height: 1fr;
+}
+
+/* ─── Results Layout ─── */
+
+.results-content {
+    height: 1fr;
+}
+
+.results-top {
+    height: 1fr;
+}
+
+.leaderboard-panel {
+    width: 2fr;
+    padding: 0 1;
+}
+
+.best-model-panel {
+    width: 1fr;
+    padding: 0 1;
+}
+
+.results-actions {
+    height: auto;
+    margin-top: 1;
+    padding: 1 0;
+}
+
+/* ─── Data Explorer Layout ─── */
+
+.data-content {
+    height: 1fr;
+}
+
+.data-top {
+    height: 1fr;
+}
+
+.dataset-list-panel {
+    width: 1fr;
+    padding: 0 1;
+}
+
+.data-details-panel {
+    width: 1fr;
+    padding: 0 1;
+}
+
+.data-actions {
+    height: auto;
+    margin-top: 1;
+    padding: 1 0;
+}
+
+/* ─── Stage Indicators ─── */
+
+.stages-row {
+    height: auto;
+    padding: 1 0;
+}
+
+.stage-indicator {
+    padding: 0 2;
+    min-width: 14;
+}
+
+.stage-indicator.pending {
+    color: $text-muted;
+}
+
+.stage-indicator.running {
+    color: #DAA520;
+    text-style: bold;
+}
+
+.stage-indicator.complete {
+    color: #2E8B57;
+    text-style: bold;
+}
+
+.stage-indicator.failed {
+    color: #8B0000;
+    text-style: bold;
+}
+
+/* ─── TextArea (Spec Preview) ─── */
+
+TextArea {
+    height: 1fr;
+    min-height: 10;
+}
+
+/* ─── Best Model Card ─── */
+
+#best-model-details {
+    padding: 1 2;
+    border: solid #C8102E;
+    margin: 1 0;
+}
+
+#data-quality-details {
+    padding: 1 2;
+    margin: 1 0;
+}
+
+/* ─── Chat Layout ─── */
+
+.chat-content {
+    height: 1fr;
+}
+
+.chat-history {
+    height: 1fr;
+    border: solid $primary-background;
+    margin: 0 0 1 0;
+    background: $surface-darken-1;
+    padding: 1 1;
+}
+
+.chat-message {
+    padding: 0 1;
+    margin: 0 0 1 0;
+}
+
+.user-message {
+    color: #87CEEB;
+}
+
+.assistant-message {
+    color: $text;
+}
+
+.system-message {
+    color: $text-muted;
+    text-style: italic;
+}
+
+.chat-input-row {
+    height: auto;
+    padding: 0 0;
+}
+
+.chat-input-field {
+    width: 1fr;
+    /* Multi-line TextArea: start compact (TextArea defaults to height:1fr,
+       which would eat the whole pane) but allow growth for multi-line prompts. */
+    height: auto;
+    min-height: 3;
+    max-height: 10;
+}
+
+.chat-send-btn {
+    width: auto;
+    min-width: 8;
+}
+
+.chat-attach-btn {
+    width: auto;
+    min-width: 5;
+}
+
+/* ─── Chat Message Variants ─── */
+
+.thinking {
+    color: #888888;
+    text-style: italic;
+    padding: 0 1;
+    margin: 0 0 1 0;
+}
+
+/* Feature 2 — ephemeral rotating "stock ticker" thought trace (transient, never
+   persisted). Dim + italic so it reads as live-progress chrome, not chat content. */
+.thought-ticker {
+    color: #888888;
+    text-style: italic;
+    padding: 0 1;
+    margin: 0 0 1 0;
+}
+
+/*  — command-queue panel: commands queued behind the in-flight turn.
+   Each row has an "⬆" send-immediately (promote-to-front) control + "✖" remove. */
+.command-queue {
+    height: auto;
+    max-height: 8;
+    background: $panel;
+    border: round $primary-darken-2;
+    padding: 0 1;
+    margin: 0 0 1 0;
+}
+
+.queue-header {
+    color: #888888;
+    text-style: italic;
+}
+
+.queue-row {
+    height: auto;
+}
+
+.queue-up-btn, .queue-del-btn {
+    min-width: 3;
+    width: auto;
+    height: 1;
+    margin: 0 1 0 0;
+}
+
+.queue-text {
+    color: $text;
+    padding: 0 1;
+}
+
+.user-msg {
+    color: #C8102E;
+    padding: 0 1;
+    margin: 0 0 1 0;
+}
+
+.bot-msg {
+    color: $text;
+    padding: 0 1;
+    margin: 0 0 1 0;
+}

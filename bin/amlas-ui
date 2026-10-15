@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Agentic-ML Terminal UI
+# Launch from anywhere - auto-finds the project directory.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+cd "$PROJECT_DIR"
+exec uv run python -m amlas.tui "$@"

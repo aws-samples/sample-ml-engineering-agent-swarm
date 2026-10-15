@@ -1,0 +1,276 @@
+[project]
+name = "agentic-ml-lifecycle-automation-surface"
+version = "0.1.0"
+description = "Agentic ML Lifecycle Automation Surface — an AWS-native, terminal-first conversational agent that drives the full ML lifecycle (stages 0-12) behind a backend-portable ports-and-adapters seam."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = "MIT-0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [
+    { name = "Amazon.com, Inc. or its affiliates" },
+]
+maintainers = [
+    { name = "Agentic ML Lifecycle Automation Surface Contributors" },
+]
+keywords = [
+    "machine-learning",
+    "mlops",
+    "agents",
+    "aws",
+    "bedrock",
+    "sagemaker",
+    "agentcore",
+    "strands",
+    "llm",
+    "ml-lifecycle",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+# Direct dependencies use lower-bound ranges so adopters can resolve compatible
+# environments. Reproducibility is provided by the committed uv.lock.
+# this package is a LIBRARY/toolkit; hard == pins in the manifest would force
+# conflicts on adopters.
+dependencies = [
+    # strands-agents is a BASE requirement, not optional. It was declared only in the
+    # `agents` extra, but 100 modules under src/amlas do an unguarded module-level
+    # `from strands import ...` — including tools/data_quality/missingness.py, which
+    # amlas.tui.chat.engine imports transitively. The consequence was that a plain
+    # `pip install amlas` produced BOTH broken entry points: `amlas` (CLI) and
+    # `amlas-ui` (TUI) each raised ModuleNotFoundError at import. Declaring it here
+    # states the real runtime contract.
+    "strands-agents>=1.1",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    # SEC-16 / R-013: harden XML parsing of remote Atom responses (arXiv) against
+    # XXE/entity-expansion classes and clear bandit B314; used by tools/research/arxiv.py.
+    "defusedxml>=0.7.1",
+    "python-frontmatter>=1.1",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "scikit-learn>=1.5",
+    "scipy>=1.13",
+    "xgboost>=2.1",
+    "lightgbm>=4.0",
+    "httpx>=0.27",
+    "optuna>=3.6",
+    "click>=8.0",
+    "rich>=13.0",
+    "textual>=0.50",
+    # SEC-04 / R-002: explicit floors on vulnerable transitive deps so the lock
+    # cannot resolve back below the fix versions. The 2026 floors below come from
+    # published vulnerability advisories.
+    "cryptography>=50.0.0",
+    "anyio>=4.14.2",  # TLS/process-pool fixes (GHSA-82r6-8w77-94w6, GHSA-5p39-cfhj-2xmp)
+    "gitpython>=3.1.62",  # Includes Git directory/diff/author fixes and GHSA-59cr-6r3x-644w
+    "idna>=3.15",
+    "mako>=1.4.2",
+    # >=1.27.2: CVE-2026-52869 (HTTP transports serve session requests without
+    # verifying the authenticated principal), CVE-2026-52870 (task handlers let any
+    # client cancel another client's tasks); >=1.28.1: CVE-2026-59950 (WebSocket
+    # transport lacks Host/Origin validation). Transitive via strands-agents.
+    "mcp>=1.28.1",
+    # >=12.3.0: 10 advisories — CVE-2026-59197 / -59205 (native heap OOB write and
+    # ImageCms heap corruption) plus 8 DoS paths (CVE-2026-54058/-54059/-54060,
+    # -55379, -55380, -59199, -59200, -59204). Transitive via matplotlib/torchvision.
+    "pillow>=12.3.0",
+    # >=0.6.4: CVE-2026-59885 / -59886 — DoS via crafted ASN.1 OBJECT IDENTIFIER and
+    # REAL values. Transitive via pyasn1-modules.
+    "pyasn1>=0.6.4",
+    # >=2.14.2: GHSA-4xgf-cpjx-pc3j. Transitive via mcp (strands-agents) and
+    # openapi-spec-validator (bedrock-agentcore-starter-toolkit); pinned here as a
+    # direct floor because neither parent has raised its own constraint yet.
+    "pydantic-settings>=2.14.2",
+    "pyjwt>=2.15.1",
+    "python-multipart>=0.0.30",
+    "starlette>=1.3.1",
+    "setuptools>=83.0.0",
+    "urllib3>=2.8.0",
+    # Estimator artifacts use Skops' inspect-before-load format;
+    # executable pickle persistence is prohibited in shipped source.
+    "skops>=0.13.0",
+    # G1 (gap-closure §G1): in-process SHAP explainability — powers
+    # ``InProcessSHAPBackend`` (backends/adapters/explainability.py) so the Stage-9
+    # Explainability readiness gate is satisfiable fully offline (TreeExplainer
+    # fast-path + KernelExplainer fallback). Imported lazily inside the adapter
+    # method (no import-time cost); CPU-only.
+    "shap>=0.44",
+]
+
+[project.optional-dependencies]
+agents = [
+    # DEP-02: pre-1.0 SDKs pinned with upper bounds — `>=0.1` allowed breaking
+    # 0.x bumps for these fast-moving APIs (PLAN §18 flags their instability).
+    #
+    # NOTE: ``strands-agents`` MOVED to [project.dependencies] — it is a base
+    # requirement, not optional (see the comment there). The ``>=1.1`` floor is
+    # unchanged and its rationale travels with it: the old ``<1.0`` cap pinned
+    # 0.3.0, whose ``Agent.__init__`` had already dropped ``tool_executor`` (the
+    # live TUI/swarm crash) and which sat BELOW the floor ``bedrock-agentcore``
+    # itself requires. ``_filter_agent_kwargs`` keeps the build robust to further
+    # ``Agent.__init__`` signature drift across 1.x.
+    "bedrock-agentcore>=1.18.1",
+    "bedrock-agentcore-starter-toolkit>=0.1",
+    "boto3>=1.35",
+    # T-HARN-14: the AgentCore harness operations (CreateHarness / UpdateHarness /
+    # InvokeHarness) first appear in botocore 1.43.0. The floor states the real
+    # requirement so a fresh resolve cannot install an SDK without them. No lock change:
+    # uv.lock already pins 1.43.57.
+    "botocore>=1.43.0",
+    # DEP-01: optuna is already a core dependency; not duplicated in this extra.
+]
+data = [
+    # PLAN §13 — DQ / imputation / synthetic optional extra (CPU-friendly,
+    # on-prem capable). Phase 6 (DQ Assessment) uses `pandera` only; the
+    # remaining members are imported lazily by later phases (7–8) and are
+    # listed here so the extra is complete per the master plan.
+    "fsspec>=2026.6.0",       # GHSA-27vj-qcqg-25rc: safe reference-file rendering
+    "sdv>=1.17",              # synthetic: GaussianCopula/CTGAN/TVAE + Metadata (Phase 8)
+    "sdmetrics>=0.16",        # synthetic validation (Phase 8)
+    "imbalanced-learn>=0.12", # SMOTE family augmentation (Phase 8)
+    "statsmodels>=0.14",      # time-series seasonal decompose + stats (Phase 7)
+    "pandera>=0.20",          # declarative expectations / silver gate (Phase 6)
+    "torch>=2.13.0",          # fixed floor for CTGAN/TVAE runtime
+    # PERF-10: Parquet engine for the columnar lakehouse read/write codepath
+    # (lake tools dispatch ``.parquet`` → pandas read_parquet/to_parquet). Lives in the
+    # ``data`` extra (not core) so a default install stays light; the lake Parquet path
+    # supports the lake Parquet read/write path.
+    "pyarrow>=16.0",
+]
+
+# Managed runtime variant: same data APIs, exact current framework version,
+# CPU wheels selected by uv. Ordinary `data` installs retain their original source.
+runtime-cpu = [
+    "fsspec>=2026.6.0",
+    "sdv>=1.17",
+    "sdmetrics>=0.16",
+    "imbalanced-learn>=0.12",
+    "statsmodels>=0.14",
+    "pandera>=0.20",
+    "torch==2.14.0",
+    "pyarrow>=16.0",
+]
+dev = [
+    "pytest>=8.4.2",
+    "ruff>=0.6",
+]
+
+security = [
+    "bandit>=1.7",
+    "cyclonedx-bom>=4.0",
+    "detect-secrets>=1.5",
+    "pip-audit>=2.7",
+]
+
+cdk = [
+    # 2.260 exposes the current Python 3.14 Lambda runtime used by AwsSolutions-L1.
+    "aws-cdk-lib>=2.260",
+    "cdk-nag>=2.37",
+    "constructs>=10.3",
+]
+[project.scripts]
+amlas = "amlas.cli.main:cli"
+amlas-ui = "amlas.tui.app:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/amlas"]
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.github",
+    "/.gitlab-ci.yml",
+    "/.secrets.baseline",
+    "/AGENTS.md",
+    "/tests",
+    "/scripts/verify_repository_governance.py",
+]
+
+[tool.bandit]
+exclude_dirs = [".venv", "build", "cdk.out", "dist"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "RUF"]
+ignore = ["E501"]
+
+# Path-scoped exceptions where a selected rule does not fit domain naming or
+# operational script conventions.
+[tool.ruff.lint.per-file-ignores]
+# ── Supported operational and training scripts ──
+# These retain established ML matrix names and bootstrap order.
+"scripts/**" = ["N806", "N803", "N812", "E402", "RUF001", "RUF002", "RUF003"]
+
+# ── scikit-learn feature-matrix convention in the ML tool layer ──
+# `X`, `X_train`, `X_test`, `X_num` (2-D design matrices) vs `y` (1-D target) is the
+# universal ML idiom; lowercasing them would obscure the math rather than clarify it.
+# RUF001-3 here are the deliberate ``×`` multiplication sign in metric/report strings.
+"src/amlas/tools/**" = ["N806", "RUF001", "RUF002", "RUF003"]
+# SageMaker-side training entrypoints carry the same sklearn feature-matrix naming (X_train/X_test).
+"src/amlas/sagemaker_entrypoints/**" = ["N806"]
+# ``ET`` is the near-universal alias for ``xml.etree.ElementTree``.
+"src/amlas/tools/research/arxiv.py" = ["N817"]
+# SHAP explainability adapter takes the sklearn design matrix ``X`` as a parameter/local.
+"src/amlas/backends/adapters/explainability.py" = ["N806", "N803"]
+
+# ── single-letter neutral-tool-module aliases in the flow layer ──
+# Flows import the backend-neutral tool modules under stable one-letter handles
+# (`research_neutral as R`, `deploy_neutral as D`, `monitor_neutral as M`) mirroring the
+# flow's domain — a deliberate, consistent convention across the ``flows`` package.
+"src/amlas/flows/**" = ["N812", "RUF001", "RUF002", "RUF003"]
+
+# ── deliberate ``×`` (U+00D7 multiplication sign) typography in user-facing strings ──
+# CLI/TUI/report surfaces render figures like "3 × 2 grid" / "10× faster"; the math sign
+# is intentional and correct. ``P`` alias for ``pathlib.Path`` in the data CLI (N817).
+"src/amlas/cli/**" = ["RUF001", "RUF002", "RUF003", "N817"]
+"src/amlas/tui/**" = ["RUF001", "RUF002", "RUF003"]
+# cost_confidence renders cost bands in docstrings/comments with the ``×`` multiplication
+# sign and ``–`` en-dash range separator ("0.5×–4×", "4× point") — deliberate math/range
+# typography, consistent with the cli/tui surfaces above.
+"src/amlas/control_plane/cost_confidence.py" = ["RUF001", "RUF002", "RUF003"]
+"src/amlas/experiments/runner.py" = ["RUF001", "RUF002", "RUF003"]
+# The Research Lead's "M6 Stage 0–3" en-dash range (comment + agent description string)
+# now lives in the lead declaration this exemption follows.
+"src/amlas/leads/declarations.py" = ["RUF001", "RUF002", "RUF003"]
+"src/amlas/backends/adapters/featurestore.py" = ["RUF001", "RUF002", "RUF003"]
+
+# ── deliberate domain exception names (control-flow sentinels, not error types) ──
+# ``_IterationRetreat`` is an internal loop-control signal (not surfaced as an error) and
+# ``SandboxRunFailed`` reads naturally at the raise sites; the Error suffix would not add
+# clarity to these intentionally-named exceptions.
+"src/amlas/orchestrator.py" = ["N818"]
+"src/amlas/demos/sandbox_runner.py" = ["N818"]
+"src/amlas/tui/jobs/manager.py" = ["N818"]
+
+# ── env-first guarded import after the CWE-706 trust-boundary comment block ──
+# ``capability.py`` intentionally defines the import-allowlist constants before the
+# guarded ``importlib`` imports they protect (documented R-B-004 / AMLAS-SEC-B-004).
+"src/amlas/control_plane/capability.py" = ["E402"]
+
+# UV source selection is used by the managed-runtime Docker build only.
+# Other installers use standard dependency metadata and need their own CPU index.
+[tool.uv]
+conflicts = [[{ extra = "data" }, { extra = "runtime-cpu" }]]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu", extra = "runtime-cpu", marker = "sys_platform == 'linux'" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
